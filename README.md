@@ -1,4 +1,8 @@
 # ​​Quick Sheet​​ - 轻量级内容管理系统
+![首页](https://github.com/user-attachments/assets/0494660f-f2c9-4cc1-8231-c4d1e931c0b5)
+![登录](https://github.com/user-attachments/assets/7ac74aa1-7a30-48fa-b70e-67ea49c53f3d)
+![后台](https://github.com/user-attachments/assets/5563245e-187d-43b9-8bd5-c4435cf0e344)
+---
 
 ​​Quick Sheet​​ 是一个简单、高效的轻量级内容管理系统，专为展示单页面内容而设计。它不依赖数据库，使用文件系统进行存储，具有简洁的管理界面和现代化的展示效果。
 
@@ -26,13 +30,14 @@
   - highlight.js (代码高亮)
   - Font Awesome (图标)
 
-## 安装
+## 安装方法
 
 1. 将所有文件上传到您的网站根目录
 2. 确保服务器支持 PHP 7.2 或更高版本
-3. 确保 `content` 和 `images` 目录可写
-4. 通过访问 `/admin` 路径登录到管理后台
-5. 默认管理员账号可在 `admin/config/admins.json` 中配置
+3. 创建 `content` 和 `images` 到目录下也就是 `content` 和 `images` 和 `admin` 和 `assets` 是同一个目录，不懂的看项目目录结构
+4. 确保 `content` 和 `images` 目录可写
+5. 通过访问 `/admin` 路径登录到管理后台
+6. 默认管理员账号可在 `admin/config/admins.json` 中配置
 
 ## 目录结构
 
