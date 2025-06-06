@@ -980,6 +980,43 @@ $saved = isset($_GET['saved']) && $_GET['saved'] == '1';
         CodeInline.tagName = 'code';
         Quill.register(CodeInline);
 
+        // 添加自定义图片调整大小功能
+        const Image = Quill.import('formats/image');
+        class ResizableImage extends Image {
+            static create(value) {
+                const node = super.create(value);
+                node.setAttribute('src', value);
+                node.setAttribute('data-original-src', value);
+                // 设置默认宽度样式
+                node.style.maxWidth = '100%';
+                return node;
+            }
+            
+            static formats(domNode) {
+                const formats = {};
+                if (domNode.style.width) {
+                    formats['width'] = domNode.style.width;
+                }
+                return formats;
+            }
+            
+            format(name, value) {
+                if (name === 'width') {
+                    if (value) {
+                        this.domNode.style.width = value;
+                    } else {
+                        this.domNode.style.width = '';
+                    }
+                } else {
+                    super.format(name, value);
+                }
+            }
+        }
+        
+        ResizableImage.blotName = 'image';
+        ResizableImage.tagName = 'img';
+        Quill.register(ResizableImage, true);
+        
         // 初始化 Quill 编辑器
         var quill = new Quill('#editor', {
             theme: 'snow',
@@ -992,8 +1029,70 @@ $saved = isset($_GET['saved']) && $_GET['saved'] == '1';
                         ['blockquote', 'link', 'image', 'code-block', 'code'],
                         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                         [{ 'color': [] }, { 'background': [] }],
-                        ['clean']
-                    ]
+                        ['clean'],
+                        [{
+                            'image': function() {
+                                // 使用默认图片处理程序
+                                const input = document.createElement('input');
+                                input.setAttribute('type', 'file');
+                                input.setAttribute('accept', 'image/*');
+                                input.click();
+
+                                input.onchange = () => {
+                                    const file = input.files[0];
+                                    if (file) {
+                                        const formData = new FormData();
+                                        formData.append('image', file);
+
+                                        fetch('admin.php', {
+                                            method: 'POST',
+                                            body: formData
+                                        })
+                                        .then(response => response.json())
+                                        .then(result => {
+                                            const range = quill.getSelection(true);
+                                            quill.insertEmbed(range.index, 'image', result.location);
+                                        })
+                                        .catch(error => {
+                                            console.error('Error:', error);
+                                            alert('上传图片失败');
+                                        });
+                                    }
+                                };
+                            }
+                        }]
+                    ],
+                    handlers: {
+                        'image': function() {
+                            // 使用默认图片处理程序
+                            const input = document.createElement('input');
+                            input.setAttribute('type', 'file');
+                            input.setAttribute('accept', 'image/*');
+                            input.click();
+
+                            input.onchange = () => {
+                                const file = input.files[0];
+                                if (file) {
+                                    const formData = new FormData();
+                                    formData.append('image', file);
+
+                                    fetch('admin.php', {
+                                        method: 'POST',
+                                        body: formData
+                                    })
+                                    .then(response => response.json())
+                                    .then(result => {
+                                        const range = quill.getSelection(true);
+                                        quill.insertEmbed(range.index, 'image', result.location);
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        alert('上传图片失败');
+                                    });
+                                }
+                            };
+                        }
+                    }
                 },
                 syntax: true,
                 clipboard: {
@@ -1117,43 +1216,6 @@ $saved = isset($_GET['saved']) && $_GET['saved'] == '1';
             });
         });
 
-        // 改进的链接识别逻辑
-        quill.on('text-change', function(delta, oldDelta, source) {
-            if (source === 'user') {
-                const text = quill.getText();
-                const urlRegex = /(?:^|\s)((?:https?:\/\/)[^\s]+)/g;
-                let match;
-                let links = [];
-                
-                // 首先收集所有链接
-                while ((match = urlRegex.exec(text)) !== null) {
-                    const url = match[1];
-                    const index = match.index + match[0].indexOf(url);
-                    links.push({
-                        url: url,
-                        index: index,
-                        length: url.length
-                    });
-                }
-
-                // 然后从后向前处理链接，避免索引变化的问题
-                links.reverse().forEach(link => {
-                    const format = quill.getFormat(link.index, link.length);
-                    // 只有当文本还不是链接时才转换
-                    if (!format.link) {
-                        // 检查URL是否有效
-                        try {
-                            new URL(link.url);
-                            quill.formatText(link.index, link.length, 'link', link.url);
-                        } catch (e) {
-                            // 如果URL无效，不进行转换
-                            console.log('Invalid URL:', link.url);
-                        }
-                    }
-                });
-            }
-        });
-
         form.onsubmit = function() {
             hiddenContent.value = quill.root.innerHTML;
             return true;
@@ -1221,6 +1283,26 @@ $saved = isset($_GET['saved']) && $_GET['saved'] == '1';
         } catch (e) {
             console.log('无法修复废弃警告，但这不影响编辑器功能');
         }
+
+        // 添加图片点击事件，实现图片大小调整
+        quill.root.addEventListener('click', function(event) {
+            if (event.target && event.target.tagName === 'IMG') {
+                const img = event.target;
+                
+                // 显示图片大小调整对话框
+                const currentWidth = img.style.width || '100%';
+                const newWidth = prompt('请输入图片宽度 (例如: 50%, 300px)', currentWidth);
+                
+                if (newWidth !== null) {
+                    // 如果用户输入了有效值
+                    if (newWidth === '') {
+                        img.style.width = '';  // 重置为默认宽度
+                    } else {
+                        img.style.width = newWidth;
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html> 

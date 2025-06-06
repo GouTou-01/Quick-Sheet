@@ -351,20 +351,7 @@
                 pre.appendChild(button);
             });
 
-            // 自动识别URL并转换为链接
-            document.querySelectorAll('.content p').forEach(paragraph => {
-                if (!paragraph.querySelector('a, img, code, pre')) { // 避免处理已有链接、图片或代码的段落
-                    const text = paragraph.innerHTML;
-                    const urlRegex = /(https?:\/\/[^\s<]+)/g;
-                    
-                    if (urlRegex.test(text)) {
-                        const newHtml = text.replace(urlRegex, url => {
-                            return `<a href="${url}" target="_blank">${url}</a>`;
-                        });
-                        paragraph.innerHTML = newHtml;
-                    }
-                }
-            });
+            // 已移除自动链接识别功能
         });
     </script>
 </body>
